@@ -42,6 +42,20 @@ import { BehaviorSubject, catchError, map, of, tap, retry } from 'rxjs';
  *  to the ChangeContentComponent."
  */
 
+
+// Archivo: ./app.component.css
+
+.card-title {
+  text-transform: uppercase;
+}
+.card-body {
+  text-transform: lowecase;
+}
+.card-footer {
+  text-transform: capitalize;
+}
+
+// Angular
 @Component({
   selector: 'app-root',
   template: `
