@@ -48,17 +48,17 @@ import { BehaviorSubject, catchError, map, of, tap, retry } from 'rxjs';
     <div class="container">
       <section>
         <div class="card">
-          <div class="card-title">{{ title }}</div>
+          <div class="card-title">{{ title | uppercase }}</div>
           <br />
           <hr />
           <br />
 
-          <div class="card-body">{{ body }}</div>
+          <div class="card-body">{{ body | lowercase }}</div>
           <br />
           <hr />
           <br />
 
-          <div class="card-footer">{{ footer }}</div>
+          <div class="card-footer">{{ footer | uppercase}}</div>
         </div>
       </section>
       <change-content></change-content>
@@ -71,7 +71,22 @@ export class AppComponent {
   body: any;
   footer: any;
 
-  constructor() {}
+  constructor(private contentService: ContentService) { }
+
+
+  setTitle(): void {
+    this.title = this.contentService.getTitle().toUpperCase();
+    return this.title;
+
+  }
+
+  setBodyContent(): void {
+    this.body = this.contentService.getBody().toLowerCase();
+  }
+
+  setFooter(): void {
+    this.footer = this.contentService.getFooter();
+  }
 }
 
 @Injectable({
@@ -88,11 +103,11 @@ export class ContentService {
     'Este es el footer '
   );
 
-  private title$ = this.title.asObservable();
+  private title$: string = this.title.asObservable();
   private body$ = this.body.asObservable();
   private footer$ = this.footer.asObservable();
 
-  constructor() {}
+  constructor(private changeContent: ChangeContentComponent) { }
 
   getTitle() {
     return this.title$;
@@ -108,6 +123,7 @@ export class ContentService {
 
   changeTitle() {
     // Desarrollar el cuerpo del método / Develop the method body
+    this.title = this.changeContent.changeTitle();
   }
 }
 
@@ -116,10 +132,10 @@ export class ContentService {
   template: `
     <section>
       <div class="card">
-        <button> Change Title </button>
-        <button> Call Api </button>
-        <section> Connection to API Success  </section>
-        <section> Connection to API Failed  </section>
+        <button (click)="changeTitle"> Change Title </button>
+        <button (click)="callApi"> Call Api </button>
+        <section [(ngModel)]="hasContent"> Connection to API Success  </section>
+        <section [(ngModel)]="hasError"> Connection to API Failed  </section>
       </div>
     </section>
   `,
@@ -128,15 +144,24 @@ export class ChangeContentComponent {
   newTitle = 'Este es el titulo modificado por otro componente';
   hasError = false;
   hasContent = false;
+  response: string = ""
 
-  constructor( private service: GetContentService) {}
+  constructor(private service: GetContentService) { }
 
-  changeTitle() {
+  changeTitle(): string {
     // Desarrollar el cuerpo del método / Develop the method body
+    return this.newTitle;
   }
 
-  callApi(){
+  callApi() {
     // Desarrollar el cuerpo del método / Develop the method body
+    try {
+      this.response = this.service.getContent();
+      this.hasContent = true;
+    } catch (error) {
+      this.hasError = true;
+
+    }
   }
 }
 
@@ -146,17 +171,17 @@ export class ChangeContentComponent {
 export class GetContentService {
   constructor(
     private http: HttpClient
-  ) {}
+  ) { }
 
-  getContent(){
+  getContent() {
     const url = 'https://sitenotexist.com/content/0';
 
     return this.http.get(url).pipe(
       retry(2),
-      map( () => 'Respuesta modificada por el servicio'),
-      catchError( (error) => of(error)),
+      map(() => 'Respuesta modificada por el servicio'),
+      catchError((error) => of(error)),
       tap((value) => console.log('check for value', value)),
-      map( () => ['Respuesta modificada por el servicio nuevamente']),
+      map(() => ['Respuesta modificada por el servicio nuevamente']),
     );
   }
 }
