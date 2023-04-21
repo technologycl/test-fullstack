@@ -22,7 +22,10 @@ class Post extends Model {
 }
 ?>
 ~~~
-
+/*
+    Respuesta: En el método Show del siguiente contralador, el método mencionado no discrimina si es por fecha sino por ID, por ende, dicho método podria modificarse 
+    agregando una condición como lo es la fecha anterior.
+*/
 ~~~
 <?php
 class PostController extends Controller {
@@ -32,7 +35,10 @@ class PostController extends Controller {
     */
     public function show($id)
     {
-        $post = Post::find($id);
+        $fechaAnterior = new DateTime();
+        $fechaAnterior = $fechaAnterior->substract("1", "day");
+        //$post = Post::find($id);
+        $post = Post::where(['id'=>$id, 'created_at'=> $fechaAnterior])->get();
         return $post;
     }
 }
@@ -52,6 +58,14 @@ It is necessary to consider the execution time, the user who performs the port e
 Explain if the following code is correct.
 */
 
+/*
+    Respuesta: No existe una comprobación de que por via Request vengan 10000 Registros como requerimientos minimo, adicionalmente al momento de crear un Post por
+    usuario, no cuenta con los atributos requeridos en el planteamiento.
+
+    Adicionalmente, en la User::find($element['User_Id']) esta de mas en la solucion dado que ya se tiene disponible el ID del usuario por cada elemento del array 
+    enviado via Request.
+*/
+
 ~~~
 <?php
 class PostController extends Controller {
@@ -65,11 +79,17 @@ class PostController extends Controller {
     public function setData(Request $request){
         $data = $request->data;
         for($element in $data){
-            $user = User::find($element['User_Id']);
+            $user = User::find($element['User_Id']); // <- Esta linea sobra en la solución
             if($user){
+                //$post = Post::create([
+                //    'title' => $element['Tittle_Post'],
+                //])
+                
                 $post = Post::create([
                     'title' => $element['Tittle_Post'],
-                ])
+                    'user_id' => $element['User_id'] // <- Falto ese valor en el array de la creacion del post
+                ]);
+                    
                 DB->connection('data_base')->table('comments')->insert([
                     'comment' => $element['Comment'],
                     'post_id' => $post->id,
