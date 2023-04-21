@@ -14,6 +14,7 @@ import { BehaviorSubject, catchError, map, of, tap, retry } from 'rxjs';
  *  Body debe estar todo en minúsculas
  *  Footer debe estar capitalizado
  * /
+ R. OK
  * "Show the content of the observables available in the ContentService 
  * service in the AppComponent component template. Additionally:"
  *  Title must be all uppercase
@@ -25,6 +26,7 @@ import { BehaviorSubject, catchError, map, of, tap, retry } from 'rxjs';
  * Se necesita que cuando el usuario haga click en el botón "Change Title", asociado al componente ChangeContentComponent,
  * actualize el titulo ("title") que se ve en el componente AppComponent 
  * / 
+ r. Ok
  * "When the user clicks on the "Change Title" button, associated to the ChangeContentComponent, it is required to, 
  * update the title ("title") seen in the AppComponent."
  *
@@ -48,17 +50,17 @@ import { BehaviorSubject, catchError, map, of, tap, retry } from 'rxjs';
     <div class="container">
       <section>
         <div class="card">
-          <div class="card-title">{{ title }}</div>
+          <div class="card-title">{{ title | uppercase }}</div>
           <br />
           <hr />
           <br />
 
-          <div class="card-body">{{ body }}</div>
+          <div class="card-body">{{ body | lowercase }}</div>
           <br />
           <hr />
           <br />
 
-          <div class="card-footer">{{ footer }}</div>
+          <div class="card-footer">{{ footer | titlecase  }}</div>
         </div>
       </section>
       <change-content></change-content>
@@ -78,6 +80,11 @@ export class AppComponent {
   providedIn: 'root',
 })
 export class ContentService {
+  
+   private titleUpdated: BehaviorSubject<string> = new BehaviorSubject(
+    'Este es el titulo Modificado'
+  );
+  
   private title: BehaviorSubject<string> = new BehaviorSubject(
     'Este es el titulo'
   );
@@ -89,10 +96,15 @@ export class ContentService {
   );
 
   private title$ = this.title.asObservable();
+  private titleUpdated$ = this.titleUpdated.asObservable();
   private body$ = this.body.asObservable();
   private footer$ = this.footer.asObservable();
 
-  constructor() {}
+  constructor() {
+    this.getTitle();
+    this.getBody();
+    this.getFooter();
+  }
 
   getTitle() {
     return this.title$;
@@ -107,7 +119,7 @@ export class ContentService {
   }
 
   changeTitle() {
-    // Desarrollar el cuerpo del método / Develop the method body
+    return this.titleUpdated$;
   }
 }
 
@@ -116,10 +128,16 @@ export class ContentService {
   template: `
     <section>
       <div class="card">
-        <button> Change Title </button>
-        <button> Call Api </button>
-        <section> Connection to API Success  </section>
-        <section> Connection to API Failed  </section>
+        <button (click)="changeTitle()"> Change Title </button>
+        <button (click)="callApi()"> Call Api </button>
+        <ng-container *ngIf="flag; else #error">
+          <section> Connection to API Success  </section>
+        </ng-container>
+        
+        </ng-content #error>
+          <section> Connection to API Failed  </section>
+        </ng-content>
+        
       </div>
     </section>
   `,
@@ -128,6 +146,7 @@ export class ChangeContentComponent {
   newTitle = 'Este es el titulo modificado por otro componente';
   hasError = false;
   hasContent = false;
+  flag = false;
 
   constructor( private service: GetContentService) {}
 
@@ -136,7 +155,16 @@ export class ChangeContentComponent {
   }
 
   callApi(){
-    // Desarrollar el cuerpo del método / Develop the method body
+    
+    this.service.getContent()
+      .subscribe( 
+      (res: any) => {
+        this.flag = true;
+      },
+      (error) => {
+        this.flag = false;
+      }
+      );
   }
 }
 
