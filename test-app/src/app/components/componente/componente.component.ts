@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import {ContentService} from '../../services/content.service';
 
 @Component({
   selector: 'app-componente',
@@ -7,14 +8,21 @@ import { Component, OnInit } from '@angular/core';
 })
 export class ComponenteComponent implements OnInit {
 
-	title:any;
-	body:any;
-	footer: any;
+	private title:any;
+	private body:any;
+	private footer: any;
 
 
-  constructor() { }
+  constructor(private contService: ContentService,) { }
 
   ngOnInit() {
+  	this.loadData();
+  }
+
+  loadData(): void{
+  	this.contService.getTitle().subscribe( (tit) => this.title = tit);
+  	this.contService.getBody().subscribe( (dato) => this.body = dato);
+  	this.contService.getFooter().subscribe( (dato) => this.footer = dato);
   }
 
 }
