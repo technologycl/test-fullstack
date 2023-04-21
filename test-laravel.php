@@ -10,32 +10,45 @@ made and which user made it Explain if the code below is correct.
 
 ~~~
 <?php
-class Post extends Model {
+class Post extends Model
+{
+
+
     /**
-    * Model Post.php
-    * Get the author of the post.
-    */
+     * Model Post.php
+     * Get the author of the post.
+     */
     public function user()
     {
         return $this->hasOne(User::class);
-    }
-}
+
+    }//end user()
+
+
+}//end class
+
 ?>
 ~~~
 
 ~~~
 <?php
-class PostController extends Controller {
-    * Method GET 
-    * api : api/post/{id}
-    * Get the post.
-    */
+class PostController extends Controller
+{
+    /*
+        Method GET
+     * api : api/post/{id}
+     * Get the post.
+     */
     public function show($id)
     {
-        $post = Post::find($id);
+        $post = Post::with('user')->find($id);
         return $post;
-    }
-}
+
+    }//end show()
+
+
+}//end class
+
 ?>
 ~~~
 
@@ -54,31 +67,46 @@ Explain if the following code is correct.
 
 ~~~
 <?php
-class PostController extends Controller {
+class PostController extends Controller
+{
     /*
-    * User has relationship one to many with Post
-    * Post has relationship one to many with Comments
-    * User has relationship one to many with Comments
-    * $request = [];
-    *
-    */
-    public function setData(Request $request){
-        $data = $request->data;
-        for($element in $data){
-            $user = User::find($element['User_Id']);
-            if($user){
-                $post = Post::create([
-                    'title' => $element['Tittle_Post'],
-                ])
-                DB->connection('data_base')->table('comments')->insert([
-                    'comment' => $element['Comment'],
-                    'post_id' => $post->id,
-                    'user_id' => $user->id
-                ]);
+     * User has relationship one to many with Post
+     * Post has relationship one to many with Comments
+     * User has relationship one to many with Comments
+     * $request = [];
+     *
+     */
+    public function setData(Request $request)
+    {
+        $minRecords = 10000;
+        $data       = $request->data;
+        if (count($data) >= $minRecords) {
+            foreach ($data as $key => $element) {
+                $user = User::find($element['User_Id']);
+                if ($user) {
+                    $post = Post::create(
+                        [
+                            'title' => $element['Tittle_Post'],
+                        ]
+                    )
+                    DB->connection('data_base')->table('comments')->insert(
+                        [
+                            'comment' => $element['Comment'],
+                            'post_id' => $post->id,
+                            'user_id' => $user->id,
+                        ]
+                    );
+                }
             }
+        } else {
+            throw new \Exception("¡El número de registros sea mínimo 10000!");
         }
-    }
-}
+
+    }//end setData()
+
+
+}//end class
+
 ?>
 ~~~
 
@@ -92,26 +120,106 @@ el número de registros de alertas superan los 6k registros. Explica el código 
 the number of alert records exceeds 6k records. Explain the code below and what you need to adding to make it work.
 */
 ~~~
+
+//EVENTO
 <?php
+ 
+namespace App\Events;
+ 
+use App\Models\Order;
+use Illuminate\Broadcasting\InteractsWithSockets;
+use Illuminate\Foundation\Events\Dispatchable;
+use Illuminate\Queue\SerializesModels;
+ 
+class ImportAlerts
+{
+    use Dispatchable, InteractsWithSockets, SerializesModels;
+
+    public $ids;
+    public $systemReports;
+
+    /**
+     * @param  array $ids Ids de usuarios que quieren ver el reporte
+     */
+    public function __construct(array $ids, SystemReport $systemReports) {
+        $this->ids = $ids;
+        $this->systemReports = $systemReports;
+    }
+}
+
+//LISTENER
+<?php
+ 
+namespace App\Listeners;
+ 
+use App\Events\OrderShipped;
+ 
+class SystemReportNotification
+{
+    /**
+     * Create the event listener.
+     */
+    public function __construct()
+    {
+        // ...
+    }
+ 
+    /**
+     * Handle the event.
+     */
+    public function handle(ImportAlerts $event): void
+    {
+        //TODO: Enviar reportes, por correo por ejemplo
+    }
+}
+
+//REGISTAR LISTENER EN EL Provider: Para indicar que SystemReportNotification está escuchando al disparo del evento ImportAlerts
+use App\Events\OrderShipped;
+use App\Listeners\SendShipmentNotification;
+ 
+/**
+ * The event listener mappings for the application.
+ *
+ * @var array
+ */
+protected $listen = [
+    ImportAlerts::class => [
+        SystemReportNotification::class,
+    ],
+];
+
+
+// Funciones del controlador, por ejemplo
+<?php
+
+public function getSystemReports() {
+    //TODO: Obtención de reporte
+    $reportData=[];
+    return new SystemReport($reportData);
+}
 /*
  * $request->ids = Id's of the Users that i want to see in the report.
  *
-*/
+ */
 public function downloadAlerts(Request $request)
-    {
+{
+    $systemReports = $this->getSystemReports();
         ImportAlerts::dispatch(
-            $request->ids
+            $request->ids,
+            $systemReports
         );
 
-        $response         = new \stdClass();
-        $response->status   = 200;
-        $response->message   = 'The report is being generated, you will receive an email when finished.';
+        $response          = new \stdClass();
+        $response->status  = 200;
+        $response->message = 'The report is being generated, you will receive an email when finished.';
 
         return response()->json(
             $response,
             200
         );
-    }
+
+}//end downloadAlerts()
+
 
 ?>
 ~~~
