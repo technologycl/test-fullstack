@@ -1,0 +1,8 @@
+<section>
+	<div class="card">
+		<button (click)="changeTitle()"> Change Title </button>
+		<button (click)="handleCallApi()"> Call Api </button>
+		<section *ngIf="hasContent"> Connection to API Success  </section>
+		<section *ngIf="hasError"> Connection to API Failed  </section>
+	</div>
+</section>
