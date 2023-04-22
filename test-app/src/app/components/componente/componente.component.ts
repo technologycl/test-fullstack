@@ -20,9 +20,15 @@ export class ComponenteComponent implements OnInit {
   }
 
   loadData(): void{
-  	this.contService.getTitle().subscribe( (tit) => this.title = tit);
+  	this.contService.getTitle().subscribe( (titulo) => this.title = titulo);
   	this.contService.getBody().subscribe( (dato) => this.body = dato);
   	this.contService.getFooter().subscribe( (dato) => this.footer = dato);
+  }
+
+  update(title:String) {
+    console.log(title);
+    this.title = title;
+    //alert("Customer Saved")
   }
 
 }

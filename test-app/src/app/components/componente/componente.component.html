@@ -1,19 +1,19 @@
  <div class="container">
-  
+
       <section>
         <div class="card">
-          <div class="card-title">{{ title }}</div>
+          <div class="card-title">{{ title | uppercase }}</div>
           <br />
           <hr />
           <br />
 
-          <div class="card-body">{{ body }}</div>
+          <div class="card-body">{{ body | lowercase }}</div>
           <br />
           <hr />
           <br />
 
-          <div class="card-footer">{{ footer }}</div>
+          <div class="card-footer">{{ footer | titlecase }}</div>
         </div>
       </section>
-      
-    </div>
+  <change-content (titleChange)="update($event)" ></change-content>      
+</div>
