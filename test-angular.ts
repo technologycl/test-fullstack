@@ -48,17 +48,17 @@ import { BehaviorSubject, catchError, map, of, tap, retry } from 'rxjs';
     <div class="container">
       <section>
         <div class="card">
-          <div class="card-title">{{ title }}</div>
+          <div class="card-title" *ngFor="let title of getTitle()">{{ title | uppercase }}</div>
           <br />
           <hr />
           <br />
 
-          <div class="card-body">{{ body }}</div>
+          <div class="card-body" *ngFor="let body of getBody()">{{ body | lowercase}}</div>
           <br />
           <hr />
           <br />
 
-          <div class="card-footer">{{ footer }}</div>
+          <div class="card-footer" *ngFor="let footer of getBody()">{{ footer | titlecase }}</div>
         </div>
       </section>
       <change-content></change-content>
@@ -116,7 +116,7 @@ export class ContentService {
   template: `
     <section>
       <div class="card">
-        <button> Change Title </button>
+        <button (click)="changeTitle()"> Change Title </button>
         <button> Call Api </button>
         <section> Connection to API Success  </section>
         <section> Connection to API Failed  </section>
@@ -128,11 +128,12 @@ export class ChangeContentComponent {
   newTitle = 'Este es el titulo modificado por otro componente';
   hasError = false;
   hasContent = false;
+  @Output() newString = new EventEmitter<string>();
 
   constructor( private service: GetContentService) {}
 
   changeTitle() {
-    // Desarrollar el cuerpo del método / Develop the method body
+    this.newString.emit(this.newTitle);    // Desarrollar el cuerpo del método / Develop the method body
   }
 
   callApi(){
